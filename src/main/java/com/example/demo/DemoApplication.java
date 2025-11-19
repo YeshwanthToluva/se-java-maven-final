@@ -13,9 +13,9 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    @GetMapping("/hello")
+    // --- CHANGE IS HERE ---
+    @GetMapping("/") 
     public String hello() {
         return "Hello there , im using java - maven.";
     }
 }
-
