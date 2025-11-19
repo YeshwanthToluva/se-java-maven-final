@@ -86,3 +86,93 @@ sudo docker run -d \
 echo "--- Setup Complete! ---"
 echo "Web application container is running. You can check its status with: sudo docker ps"
 echo "Access the application via your EC2 public IP on port $HOST_PORT (e.g., http://<EC2-IP>:$HOST_PORT)"
+
+
+
+
+this another one
+#!/bin/bash
+# Script to automate the full Nagios container lifecycle: Pull, Run, Status, Stop, and Cleanup.
+
+# --- Configuration Variables ---
+NAGIOS_IMAGE="jasonrivers/nagios:latest"
+NAGIOS_CONTAINER_NAME="nagiosdemo"
+HOST_PORT="9091"
+CONTAINER_PORT="80"
+NAGIOS_URL="http://localhost:$HOST_PORT"
+NAGIOS_USER="nagiosadmin"
+NAGIOS_PASS="nagios"
+
+echo "========================================="
+echo "   🚀 Automated Nagios Deployment Script "
+echo "========================================="
+
+# --- 1. Pull Image (Ensures the latest is available) ---
+echo "## 1. Pulling Nagios Image"
+echo "---"
+if docker pull $NAGIOS_IMAGE; then
+    echo "Image '$NAGIOS_IMAGE' pulled successfully."
+else
+    echo "ERROR: Failed to pull Docker image. Check your internet connection or repository name."
+    exit 1
+fi
+
+# --- 2. Run Container ---
+echo ""
+echo "## 2. Running Nagios Container on Port $HOST_PORT"
+echo "---"
+
+# Check for and remove any existing container named 'nagiosdemo' (stopped or failed)
+if docker ps -a --filter name=$NAGIOS_CONTAINER_NAME | grep -q $NAGIOS_CONTAINER_NAME; then
+    echo "Found existing container named '$NAGIOS_CONTAINER_NAME'. Removing it for a fresh run..."
+    docker rm -f $NAGIOS_CONTAINER_NAME
+fi
+
+# Check if the desired port is currently allocated by a non-Docker process
+if sudo ss -tuln | grep -q ":$HOST_PORT "; then
+    # We allow the script to continue here, as Docker's internal checks are robust, 
+    # but give a warning if a non-Docker process is using it.
+    echo "WARNING: Local port $HOST_PORT appears to be in use by another application."
+fi
+
+# Run the container in detached mode
+echo "Starting container '$NAGIOS_CONTAINER_NAME'..."
+if docker run -d --name $NAGIOS_CONTAINER_NAME -p $HOST_PORT:$CONTAINER_PORT $NAGIOS_IMAGE; then
+    echo "Container started successfully."
+else
+    echo "FATAL ERROR: Container failed to start. Port $HOST_PORT may still be in use."
+    exit 1
+fi
+
+# --- 3. Verification and Access ---
+echo ""
+echo "## 3. Verification and Access"
+echo "---"
+
+# Show running containers (as per your checklist)
+docker ps
+
+# Access information
+echo "Nagios is accessible at: $NAGIOS_URL"
+echo "Default Credentials: Username: $NAGIOS_USER, Password: $NAGIOS_PASS"
+echo "To access the web UI, you would typically run 'open $NAGIOS_URL' or navigate there manually."
+
+# --- 4. Cleanup/Stop (Instructions) ---
+echo ""
+echo "## 4. Cleanup Instructions"
+echo "---"
+
+echo "To stop the running Nagios container (as per your checklist):"
+echo "   $ docker stop $NAGIOS_CONTAINER_NAME"
+echo ""
+
+echo "To verify it is stopped (as per your checklist):"
+echo "   $ docker ps"
+echo ""
+
+echo "To delete the downloaded image and reclaim disk space (as per your checklist):"
+echo "   $ docker rmi $NAGIOS_IMAGE"
+
+echo "========================================="
+echo "      Script Execution Finished!         "
+echo "========================================="
